@@ -1,7 +1,11 @@
 package com.translator.up.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "user")
@@ -24,16 +28,17 @@ public class UserEntity {
     private String password;
     @Column(name = "role")
     private String role;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<ProjectEntity> projectEntityList;
 
-    @Override
-    public String toString() {
-        return "UserEntity{" +
-                "id=" + id +
-                ", fullName='" + fullName + '\'' +
-                ", email='" + email + '\'' +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                ", password='" + password + '\'' +
-                ", role='" + role + '\'' +
-                '}';
+    public void addProject(ProjectEntity entity) {
+        projectEntityList.add(entity);
+        entity.setUser(this);
+    }
+
+    public void removeProject(ProjectEntity entity) {
+        projectEntityList.remove(entity);
+        entity.setUser(null);
     }
 }

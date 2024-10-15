@@ -3,7 +3,9 @@ package com.translator.up.controller;
 import com.translator.up.entity.UserEntity;
 import com.translator.up.model.common.ApiResponse;
 import com.translator.up.model.request.LoginRequest;
+import com.translator.up.model.request.ProjectRequest;
 import com.translator.up.model.request.RegisterUserRequest;
+import com.translator.up.model.response.ProjectDTO;
 import com.translator.up.service.user.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +43,14 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<String> logout(HttpSession session){
+    public ApiResponse<String> logout(HttpSession session) {
         session.invalidate();
-        return new ApiResponse<>("success","Successfully logout",null,"200");
+        return new ApiResponse<>("success", "Successfully logout", null, "200");
+    }
+
+    @PostMapping("/create/translaterequest")
+    public ApiResponse<ProjectDTO> createTranslateRequest(@RequestBody ProjectRequest request) {
+        return userService.addProject(request);
     }
 
 }
