@@ -6,10 +6,7 @@ import com.translator.up.exception.user.EmailAlreadyExistsException;
 import com.translator.up.exception.user.PhoneNumberAlreadyExistsException;
 import com.translator.up.exception.user.UserDoesNotExistsException;
 import com.translator.up.model.common.ApiResponse;
-import com.translator.up.model.request.ProjectRequest;
-import com.translator.up.model.request.RegisterUserRequest;
-import com.translator.up.model.request.UpdateTranslatedFileProject;
-import com.translator.up.model.request.UpdateUserRequest;
+import com.translator.up.model.request.*;
 import com.translator.up.model.response.ProjectDTO;
 import com.translator.up.repository.user.ProjectRepository;
 import com.translator.up.repository.user.UserRepository;
@@ -101,6 +98,9 @@ public class UserService {
             return new ApiResponse<>("success", "Success", projectDTO, "200");
         } else {
             throw new UserDoesNotExistsException("User does not exist");
+        }
+    }
+
     public ApiResponse<UserEntity> getUserProfile(Long userId) {
         Optional<UserEntity> user = userRepository.findById(userId);
         return user.map(userEntity -> new ApiResponse<>("success", "Success", userEntity, null)).orElseGet(() -> new ApiResponse<>("success", "User not found", null, "400"));
@@ -109,14 +109,47 @@ public class UserService {
     public ApiResponse<UserEntity> editUserProfile(UpdateUserRequest request) {
         Optional<UserEntity> user = userRepository.findById(request.getId());
         if (user.isEmpty()) {
-            return new ApiResponse<>("success", "User not found", null, "400");
+            return new ApiResponse<>("error", "User not found", null, "400");
         } else {
             UserEntity editUser = user.get();
             editUser.setFullName(request.getFullName());
             editUser.setPhoneNumber(request.getPhoneNumber());
             editUser.setPassword(passwordEncoder.encode(request.getPassword()));
             userRepository.save(editUser);
-            return new ApiResponse<>("success", "User not found", editUser, null);
+            return new ApiResponse<>("success", "Successfully", editUser, null);
+        }
+    }
+
+    public ApiResponse<ProjectEntity> editTranslateProject(UpdateTranslateProjectRequest request) {
+        Optional<ProjectEntity> project = projectRepository.findById(request.getId());
+        if (project.isEmpty()) {
+            return new ApiResponse<>("error", "Project not found", null, "400");
+        } else {
+            ProjectEntity projectEntity = project.get();
+            projectEntity.setTitle(request.getTitle());
+            projectEntity.setDescription(request.getDescription());
+            projectEntity.setDeadline(request.getDeadline());
+            projectEntity.setBudget(request.getBudget());
+            projectEntity.setSourceLanguage(request.getSourceLanguage());
+            projectEntity.setTargetLanguage(request.getTargetLanguage());
+            projectEntity.setTranslateFile(request.getTranslateFile());
+            projectRepository.save(projectEntity);
+            return new ApiResponse<>("success", "Successfully", projectEntity, null);
+        }
+    }
+
+    public ApiResponse<ProjectEntity> getTranslateProject(Long id) {
+        Optional<ProjectEntity> project = projectRepository.findById(id);
+        return project.map(projectEntity -> new ApiResponse<>("success", "Successfully", projectEntity, null)).orElseGet(() -> new ApiResponse<>("error", "Project not found", null, "400"));
+    }
+
+    public ApiResponse<ProjectEntity> deleteTranslateProject(Long id) {
+        Optional<ProjectEntity> project = projectRepository.findById(id);
+        if (project.isEmpty()) {
+            return new ApiResponse<>("error", "Project not found", null, "400");
+        } else {
+            projectRepository.deleteById(project.get().getId());
+            return new ApiResponse<>("success", "Successfully", null, null);
         }
     }
 }
