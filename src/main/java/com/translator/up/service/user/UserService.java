@@ -9,6 +9,7 @@ import com.translator.up.model.common.ApiResponse;
 import com.translator.up.model.request.ProjectRequest;
 import com.translator.up.model.request.RegisterUserRequest;
 import com.translator.up.model.request.UpdateTranslatedFileProject;
+import com.translator.up.model.request.UpdateUserRequest;
 import com.translator.up.model.response.ProjectDTO;
 import com.translator.up.repository.user.ProjectRepository;
 import com.translator.up.repository.user.UserRepository;
@@ -100,6 +101,22 @@ public class UserService {
             return new ApiResponse<>("success", "Success", projectDTO, "200");
         } else {
             throw new UserDoesNotExistsException("User does not exist");
+    public ApiResponse<UserEntity> getUserProfile(Long userId) {
+        Optional<UserEntity> user = userRepository.findById(userId);
+        return user.map(userEntity -> new ApiResponse<>("success", "Success", userEntity, null)).orElseGet(() -> new ApiResponse<>("success", "User not found", null, "400"));
+    }
+
+    public ApiResponse<UserEntity> editUserProfile(UpdateUserRequest request) {
+        Optional<UserEntity> user = userRepository.findById(request.getId());
+        if (user.isEmpty()) {
+            return new ApiResponse<>("success", "User not found", null, "400");
+        } else {
+            UserEntity editUser = user.get();
+            editUser.setFullName(request.getFullName());
+            editUser.setPhoneNumber(request.getPhoneNumber());
+            editUser.setPassword(passwordEncoder.encode(request.getPassword()));
+            userRepository.save(editUser);
+            return new ApiResponse<>("success", "User not found", editUser, null);
         }
     }
 }
