@@ -34,6 +34,8 @@ public class ProjectEntity {
     private String status;
     @Column(name = "translate_file")
     private String translateFile;
+    @Column(name = "translated_file")
+    private String translatedFile;
     @Column(name = "created_at")
     private String createdAt;
     @ManyToOne
@@ -44,7 +46,7 @@ public class ProjectEntity {
     public ProjectDTO mapToDTO() {
         return new ProjectDTO(
                 this.id, this.title, this.user.getFullName(), this.user.getPhoneNumber(), this.user.getEmail(),
-                this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline, this.status, this.translateFile,
+                this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline, this.status, this.translateFile, this.translatedFile,
                 this.createdAt
         );
     }

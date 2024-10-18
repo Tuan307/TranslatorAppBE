@@ -28,6 +28,8 @@ public class UserEntity {
     private String password;
     @Column(name = "role")
     private String role;
+    @Column(name = "status")
+    private String status;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ProjectEntity> projectEntityList;

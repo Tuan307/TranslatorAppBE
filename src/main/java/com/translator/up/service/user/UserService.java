@@ -8,6 +8,7 @@ import com.translator.up.exception.user.UserDoesNotExistsException;
 import com.translator.up.model.common.ApiResponse;
 import com.translator.up.model.request.ProjectRequest;
 import com.translator.up.model.request.RegisterUserRequest;
+import com.translator.up.model.request.UpdateTranslatedFileProject;
 import com.translator.up.model.response.ProjectDTO;
 import com.translator.up.repository.user.ProjectRepository;
 import com.translator.up.repository.user.UserRepository;
@@ -43,6 +44,11 @@ public class UserService {
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPassword(encodePassword);
         user.setRole(request.getRole());
+        if (request.getRole().equalsIgnoreCase("customer")) {
+            user.setStatus("working");
+        } else {
+            user.setStatus("pending");
+        }
         userRepository.save(user);
         return user;
     }
@@ -53,9 +59,12 @@ public class UserService {
             throw new UserDoesNotExistsException("User does not exist");
         }
         if (passwordEncoder.matches(password, user.get().getPassword())) {
-            return new ApiResponse<UserEntity>("success", "Login successfully", user.get(), "200");
+            if (user.get().getStatus().equalsIgnoreCase("pending")) {
+                return new ApiResponse<>("success", "Wait for admin to approve your account", null, "401");
+            }
+            return new ApiResponse<>("success", "Login successfully", user.get(), "200");
         } else {
-            return new ApiResponse<UserEntity>("error", "Wrong password", null, "400");
+            return new ApiResponse<>("error", "Wrong password", null, "400");
         }
     }
 
@@ -73,6 +82,19 @@ public class UserService {
             projectEntity.setTranslateFile(request.getFile());
             projectEntity.setStatus(request.getStatus());
             user.get().addProject(projectEntity);
+            projectRepository.save(projectEntity);
+            ProjectDTO projectDTO = projectEntity.mapToDTO();
+            return new ApiResponse<>("success", "Success", projectDTO, "200");
+        } else {
+            throw new UserDoesNotExistsException("User does not exist");
+        }
+    }
+
+    public ApiResponse<ProjectDTO> updateTranslatedFileProject(UpdateTranslatedFileProject request) {
+        Optional<UserEntity> user = userRepository.findById(request.getId());
+        if (user.isPresent()) {
+            ProjectEntity projectEntity = new ProjectEntity();
+            projectEntity.setTranslateFile(request.getTranslatedFile());
             projectRepository.save(projectEntity);
             ProjectDTO projectDTO = projectEntity.mapToDTO();
             return new ApiResponse<>("success", "Success", projectDTO, "200");

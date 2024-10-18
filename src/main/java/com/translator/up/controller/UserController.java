@@ -28,7 +28,9 @@ public class UserController {
     @PostMapping("/login")
     public ApiResponse<UserEntity> login(@RequestBody LoginRequest request, HttpSession session) {
         ApiResponse<UserEntity> user = userService.login(request.getEmail(), request.getPassword());
-        session.setAttribute("user", user.getData());
+        if (!user.getErrorCode().equals("401")) {
+            session.setAttribute("user", user.getData());
+        }
         return user;
     }
 

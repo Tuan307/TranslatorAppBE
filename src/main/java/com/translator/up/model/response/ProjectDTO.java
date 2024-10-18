@@ -22,5 +22,6 @@ public class ProjectDTO {
     private String deadline;
     private String status;
     private String file;
+    private String translatedFile;
     private String createdAt;
 }
