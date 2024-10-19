@@ -1,12 +1,15 @@
 package com.translator.up.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.translator.up.model.response.ProjectDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Table(name = "project")
@@ -42,6 +45,9 @@ public class ProjectEntity {
     @JoinColumn(name = "client_id", nullable = false)
     @JsonBackReference
     private UserEntity user;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<NotificationEntity> notificationEntityList;
 
     public ProjectDTO mapToDTO() {
         return new ProjectDTO(
