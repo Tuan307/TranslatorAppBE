@@ -14,4 +14,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     @Query("SELECT p FROM ProjectEntity p WHERE p.status = :status AND p.user.id = :userId")
     List<ProjectEntity> findByStatusAndUserId(@Param("status") String status, @Param("userId") Long userId);
 
+    @Query("SELECT p FROM ProjectEntity p WHERE p.sourceLanguage = :sourceLanguage AND p.targetLanguage = :targetLanguage")
+    List<ProjectEntity> findBySourceAndTargetLanguage(@Param("sourceLanguage") String sourceLanguage, @Param("targetLanguage") String targetLanguage);
+
 }

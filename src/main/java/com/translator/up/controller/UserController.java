@@ -136,7 +136,7 @@ public class UserController {
     @GetMapping("/download/project/{projectId}/{fileName}")
     public ResponseEntity<Resource> downloadFile(@PathVariable Long projectId, @PathVariable String fileName) {
         // Lấy file từ service
-        Resource resource = userService.loadFileAsResource(projectId, fileName);
+        Resource resource = userService.downloadFile(projectId, fileName);
         if (!resource.exists()) {
             return ResponseEntity.badRequest().body(null);
         }
@@ -153,4 +153,29 @@ public class UserController {
         return userService.deleteTranslateProject(id);
     }
 
+    @SessionRequired
+    @GetMapping("/translators")
+    public ApiResponse<List<UserEntity>> getAllTranslator() {
+        return userService.findTranslators();
+    }
+
+    @SessionRequired
+    @PutMapping("/translated/upload")
+    public ApiResponse<ProjectDTO> uploadTranslatedFile(@RequestParam(name = "id") Long id, @RequestParam(name = "translated_file") MultipartFile translatedFile, @RequestParam(name = "status") String status, HttpSession session) {
+        UserEntity user = (UserEntity) session.getAttribute("user");
+        return userService.updateTranslatedFileProject(new UpdateTranslatedFileProject(id, user.getId(), status, translatedFile));
+    }
+
+    @SessionRequired
+    @PutMapping("/translated/accept")
+    public ApiResponse<ProjectDTO> acceptTranslateProject(@RequestBody TranslatorAcceptTranslateProject request, HttpSession session) {
+        UserEntity user = (UserEntity) session.getAttribute("user");
+        return userService.translatorAcceptTranslateRequest(request, user.getId());
+    }
+
+    @SessionRequired
+    @GetMapping("/project/translator")
+    public ApiResponse<List<ProjectEntity>> findProjectByLanguage(@RequestParam("sourceLang") String sourceLang, @RequestParam("targetLang") String targetLang) {
+        return userService.findProjectByLanguage(sourceLang, targetLang);
+    }
 }

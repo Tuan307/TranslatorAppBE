@@ -1,5 +1,6 @@
 package com.translator.up.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,7 +33,11 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ProjectEntity> projectEntityList;
+    @OneToMany(mappedBy = "translator", cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<ProjectEntity> translatorProjectList;
     @OneToMany(mappedBy = "userSender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     @JsonManagedReference
     private List<NotificationEntity> senderNotificationList;
     @OneToMany(mappedBy = "userReceiver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -42,6 +47,16 @@ public class UserEntity {
     public void addProject(ProjectEntity entity) {
         projectEntityList.add(entity);
         entity.setUser(this);
+    }
+
+    public void addTranslateProject(ProjectEntity entity) {
+        translatorProjectList.add(entity);
+        entity.setTranslator(this);
+    }
+
+    public void addNotifications(NotificationEntity entity) {
+        receiverNotificationList.add(entity);
+        entity.setUserReceiver(this);
     }
 
     public void removeProject(ProjectEntity entity) {

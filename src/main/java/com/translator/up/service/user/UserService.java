@@ -1,5 +1,6 @@
 package com.translator.up.service.user;
 
+import com.translator.up.entity.NotificationEntity;
 import com.translator.up.entity.ProjectEntity;
 import com.translator.up.entity.UserEntity;
 import com.translator.up.exception.user.EmailAlreadyExistsException;
@@ -8,21 +9,16 @@ import com.translator.up.exception.user.UserDoesNotExistsException;
 import com.translator.up.model.common.ApiResponse;
 import com.translator.up.model.request.*;
 import com.translator.up.model.response.ProjectDTO;
+import com.translator.up.repository.notification.NotificationRepository;
 import com.translator.up.repository.user.ProjectRepository;
 import com.translator.up.repository.user.UserRepository;
+import com.translator.up.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,16 +31,9 @@ public class UserService {
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
     private ProjectRepository projectRepository;
-
-    private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
-
-    public UserService() {
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not create the directory to store files.", ex);
-        }
-    }
+    @Autowired
+    private NotificationRepository notificationRepository;
+    private FileUtils fileUtilsClass = new FileUtils();
 
     public UserEntity registerUser(RegisterUserRequest request) {
         String encodePassword = passwordEncoder.encode(request.getPassword());
@@ -89,7 +78,8 @@ public class UserService {
 
     public ApiResponse<ProjectDTO> addProject(ProjectRequest request) {
         Optional<UserEntity> user = userRepository.findById(request.getClientId());
-        Long id = (long) projectRepository.findAll().size() + 1;
+        List<ProjectEntity> projects = projectRepository.findAll();
+        Long id = projects.get(projects.size() - 1).getId() + 1;
         if (user.isPresent()) {
             try {
                 ProjectEntity projectEntity = new ProjectEntity();
@@ -100,7 +90,7 @@ public class UserService {
                 projectEntity.setSourceLanguage(request.getSourceLanguage());
                 projectEntity.setTargetLanguage(request.getTargetLanguage());
                 projectEntity.setCreatedAt(request.getCreatedAt());
-                String translateFilePath = storeFile(request.getFile(), id);
+                String translateFilePath = fileUtilsClass.storeFile(request.getFile(), id);
                 projectEntity.setTranslateFile(translateFilePath);
                 projectEntity.setStatus(request.getStatus());
                 user.get().addProject(projectEntity);
@@ -116,15 +106,55 @@ public class UserService {
     }
 
     public ApiResponse<ProjectDTO> updateTranslatedFileProject(UpdateTranslatedFileProject request) {
-        Optional<UserEntity> user = userRepository.findById(request.getId());
-        if (user.isPresent()) {
-            ProjectEntity projectEntity = new ProjectEntity();
-            projectEntity.setTranslateFile(request.getTranslatedFile());
+        Optional<ProjectEntity> project = projectRepository.findById(request.getId());
+        Optional<UserEntity> user = userRepository.findById(request.getUserUploadId());
+        if (project.isPresent()) {
+            try {
+                ProjectEntity projectEntity = project.get();
+                projectEntity.setStatus(request.getStatus());
+                projectEntity.setTranslatedFile(fileUtilsClass.storeFile(request.getTranslatedFile(), projectEntity.getId()));
+                user.get().addTranslateProject(projectEntity);
+                NotificationEntity notificationEntity = new NotificationEntity();
+                notificationEntity.setTitle("Thông báo hoàn thành");
+                notificationEntity.setMessage(user.get().getFullName() + " đã dịch xong yêu cầu " + projectEntity.getTitle());
+                notificationEntity.setHasRead(false);
+                notificationEntity.setProject(projectEntity);
+                notificationEntity.setCreatedAt("");
+                notificationEntity.setUserSender(projectEntity.getTranslator());
+                projectEntity.getUser().addNotifications(notificationEntity);
+                projectRepository.save(projectEntity);
+                notificationRepository.save(notificationEntity);
+                ProjectDTO projectDTO = projectEntity.mapToDTO();
+                return new ApiResponse<>("success", "Success", projectDTO, "200");
+            } catch (IOException e) {
+                return new ApiResponse<>("success", "Success", null, "400");
+            }
+        } else {
+            return new ApiResponse<>("success", "Success", null, "400");
+        }
+    }
+
+    public ApiResponse<ProjectDTO> translatorAcceptTranslateRequest(TranslatorAcceptTranslateProject request, Long userId) {
+        Optional<ProjectEntity> project = projectRepository.findById(request.getId());
+        Optional<UserEntity> user = userRepository.findById(userId);
+        if (project.isPresent() && user.isPresent()) {
+            ProjectEntity projectEntity = project.get();
+            projectEntity.setStatus(request.getStatus());
+            user.get().addTranslateProject(projectEntity);
+            NotificationEntity notificationEntity = new NotificationEntity();
+            notificationEntity.setTitle("Thông báo");
+            notificationEntity.setMessage(user.get().getFullName() + " đã nhận yêu cầu " + projectEntity.getTitle());
+            notificationEntity.setHasRead(false);
+            notificationEntity.setProject(projectEntity);
+            notificationEntity.setCreatedAt("");
+            notificationEntity.setUserSender(projectEntity.getTranslator());
+            projectEntity.getUser().addNotifications(notificationEntity);
             projectRepository.save(projectEntity);
+            notificationRepository.save(notificationEntity);
             ProjectDTO projectDTO = projectEntity.mapToDTO();
             return new ApiResponse<>("success", "Success", projectDTO, "200");
         } else {
-            throw new UserDoesNotExistsException("User does not exist");
+            return new ApiResponse<>("success", "Success", null, "400");
         }
     }
 
@@ -160,7 +190,7 @@ public class UserService {
                 projectEntity.setBudget(request.getBudget());
                 projectEntity.setSourceLanguage(request.getSourceLanguage());
                 projectEntity.setTargetLanguage(request.getTargetLanguage());
-                String translateFilePath = storeFile(request.getTranslateFile(), projectEntity.getId());
+                String translateFilePath = fileUtilsClass.storeFile(request.getTranslateFile(), projectEntity.getId());
                 projectEntity.setTranslateFile(translateFilePath);
                 projectRepository.save(projectEntity);
                 return new ApiResponse<>("success", "Successfully", projectEntity, null);
@@ -219,59 +249,17 @@ public class UserService {
         }
     }
 
-    // luu tru file
-    private String storeFile(MultipartFile file, Long projectId) throws IOException {
-        // Normalize file name and save it
-        String fileName = file.getOriginalFilename();
-        assert fileName != null;
-        Path subFolder = this.fileStorageLocation.resolve(String.valueOf(projectId));
-        if (!Files.exists(subFolder)) {
-            Files.createDirectories(subFolder);
-        }
-        Path targetLocation = subFolder.resolve(fileName);
-        if (Files.exists(targetLocation)) {
-            Files.delete(targetLocation);
-        }
-        Files.copy(file.getInputStream(), targetLocation);
-        return fileName;
+    public Resource downloadFile(Long projectId, String fileName) {
+        return fileUtilsClass.loadFileAsResource(projectId, fileName);
     }
 
-    // Tạo URI cho file download
-    private String createDownloadUri(String fileName) {
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("api/v1/user/download/project/")
-                .path(fileName)
-                .toUriString();
+    public ApiResponse<List<UserEntity>> findTranslators() {
+        List<UserEntity> listOfTranslators = userRepository.findByRole("translator");
+        return new ApiResponse<>("success", "Successful", listOfTranslators, "");
     }
 
-    // Tải file từ hệ thống
-    public Resource loadFileAsResource(Long projectId, String fileName) {
-        try {
-            Path subFolder = this.fileStorageLocation.resolve(String.valueOf(projectId));
-            if (!Files.exists(subFolder)) {
-                throw new RuntimeException("File not found " + fileName);
-            }
-            Path targetLocation = subFolder.resolve(fileName).normalize();
-            Resource resource = new UrlResource(targetLocation.toUri());
-            if (resource.exists()) {
-                return resource;
-            } else {
-                throw new RuntimeException("File not found " + fileName);
-            }
-        } catch (MalformedURLException ex) {
-            throw new RuntimeException("File not found " + fileName, ex);
-        }
-    }
-
-    // Xoa file khoi storage
-    public void deleteFile(String fileName) throws IOException {
-        // Construct the file path
-        Path filePath = this.fileStorageLocation.resolve(fileName);
-        // Delete the file if it exists
-        if (Files.exists(filePath)) {
-            Files.delete(filePath);
-        } else {
-            throw new IOException("File not found: " + fileName);
-        }
+    public ApiResponse<List<ProjectEntity>> findProjectByLanguage(String source, String target) {
+        List<ProjectEntity> list = projectRepository.findBySourceAndTargetLanguage(source, target);
+        return new ApiResponse<>("success", "Successful", list, "");
     }
 }

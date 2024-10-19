@@ -13,6 +13,7 @@ public class ProjectDTO {
     private Long id;
     private String title;
     private String clientName;
+    private String translatorName;
     private String clientPhoneNumber;
     private String clientEmail;
     private String description;
