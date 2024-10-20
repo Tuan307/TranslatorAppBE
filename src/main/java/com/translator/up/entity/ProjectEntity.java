@@ -54,6 +54,9 @@ public class ProjectEntity {
     @JsonIgnore
     @JsonManagedReference
     private List<NotificationEntity> notificationEntityList;
+    @OneToOne(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
+    private ReviewEntity review;
 
     public ProjectDTO mapToDTO() {
         if (translator == null) {

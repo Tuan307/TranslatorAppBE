@@ -5,11 +5,12 @@ import com.translator.up.model.common.ApiResponse;
 import com.translator.up.model.response.NotificationDTO;
 import com.translator.up.repository.notification.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+@Service
 public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;

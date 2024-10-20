@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
@@ -16,5 +17,8 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
 
     @Query("SELECT p FROM ProjectEntity p WHERE p.sourceLanguage = :sourceLanguage AND p.targetLanguage = :targetLanguage")
     List<ProjectEntity> findBySourceAndTargetLanguage(@Param("sourceLanguage") String sourceLanguage, @Param("targetLanguage") String targetLanguage);
+
+    @Query("SELECT p FROM ProjectEntity p WHERE p.user.id = :userId AND p.id = :id")
+    Optional<ProjectEntity> findByUserIdAndProjectId(@Param("userId") Long userId, @Param("id") Long id);
 
 }
