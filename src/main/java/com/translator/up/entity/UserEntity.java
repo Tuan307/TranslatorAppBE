@@ -2,6 +2,7 @@ package com.translator.up.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.translator.up.model.response.UserDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,6 +44,10 @@ public class UserEntity {
     @OneToMany(mappedBy = "userReceiver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<NotificationEntity> receiverNotificationList;
+    @OneToMany(mappedBy = "userSupport", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @JsonIgnore
+    private List<SupportTicketEntity> supportTicketEntityList;
 
     public void addProject(ProjectEntity entity) {
         projectEntityList.add(entity);
@@ -62,5 +67,9 @@ public class UserEntity {
     public void removeProject(ProjectEntity entity) {
         projectEntityList.remove(entity);
         entity.setUser(null);
+    }
+
+    public UserDTO mapToDTO() {
+        return new UserDTO(this.id, this.fullName, this.email, this.phoneNumber, this.role, this.status);
     }
 }

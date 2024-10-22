@@ -7,6 +7,7 @@ import com.translator.up.exception.user.SessionNotFoundException;
 import com.translator.up.model.common.ApiResponse;
 import com.translator.up.model.request.*;
 import com.translator.up.model.response.ProjectDTO;
+import com.translator.up.model.response.UserDTO;
 import com.translator.up.service.user.UserService;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
@@ -177,5 +178,15 @@ public class UserController {
     @GetMapping("/project/translator")
     public ApiResponse<List<ProjectEntity>> findProjectByLanguage(@RequestParam("sourceLang") String sourceLang, @RequestParam("targetLang") String targetLang) {
         return userService.findProjectByLanguage(sourceLang, targetLang);
+    }
+
+    @GetMapping("/admin/approve/list")
+    public ApiResponse<List<UserDTO>> findUserForAdminToApprove() {
+        return userService.findUserForAdminToApprove();
+    }
+
+    @PutMapping("/admin/approve")
+    public ApiResponse<UserDTO> updateUserAccountStatus(@RequestBody ApproveUserRequest request) {
+        return userService.updateUserAccountStatus(request);
     }
 }

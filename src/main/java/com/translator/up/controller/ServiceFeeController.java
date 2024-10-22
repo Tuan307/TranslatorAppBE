@@ -17,7 +17,7 @@ public class ServiceFeeController {
 
     @SessionRequired
     @GetMapping("")
-    public ApiResponse<Double> getAllPersonalReviews(@RequestParam(name = "originLanguage") String source, @RequestParam("targetLanguage") String target) {
+    public ApiResponse<Double> getAllServicesFee(@RequestParam(name = "originLanguage") String source, @RequestParam("targetLanguage") String target) {
         return service.getServiceFee(source, target);
     }
 

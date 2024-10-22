@@ -9,6 +9,7 @@ import com.translator.up.exception.user.UserDoesNotExistsException;
 import com.translator.up.model.common.ApiResponse;
 import com.translator.up.model.request.*;
 import com.translator.up.model.response.ProjectDTO;
+import com.translator.up.model.response.UserDTO;
 import com.translator.up.repository.notification.NotificationRepository;
 import com.translator.up.repository.user.ProjectRepository;
 import com.translator.up.repository.user.UserRepository;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -261,5 +263,24 @@ public class UserService {
     public ApiResponse<List<ProjectEntity>> findProjectByLanguage(String source, String target) {
         List<ProjectEntity> list = projectRepository.findBySourceAndTargetLanguage(source, target);
         return new ApiResponse<>("success", "Successful", list, "");
+    }
+
+    public ApiResponse<List<UserDTO>> findUserForAdminToApprove() {
+        return new ApiResponse<>("success", "Successful", userRepository.findByStatus("pending").stream().map(UserEntity::mapToDTO).collect(Collectors.toList()), "");
+    }
+
+    public ApiResponse<UserDTO> updateUserAccountStatus(ApproveUserRequest request) {
+        Optional<UserEntity> user = userRepository.findById(request.getId());
+        if (user.isEmpty()) {
+            return new ApiResponse<>("error", "User not found", null, "400");
+        }
+        UserEntity model = user.get();
+        if (request.getApproveUser()) {
+            model.setStatus("working");
+            userRepository.save(model);
+        } else {
+            userRepository.deleteById(model.getId());
+        }
+        return new ApiResponse<>("success", "Successful", model.mapToDTO(), "");
     }
 }
