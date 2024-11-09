@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins("http://localhost:3000") // Cho phép React app ở localhost:3000
-                .allowedMethods("GET", "POST") // Các phương thức HTTP cho phép
+                .allowedMethods("GET", "POST", "PUT", "DELETE") // Các phương thức HTTP cho phép
                 .allowCredentials(true); // Cho phép gửi cookie
     }
 }

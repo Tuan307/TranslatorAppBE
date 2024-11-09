@@ -25,4 +25,9 @@ public class ProjectDTO {
     private String file;
     private String translatedFile;
     private String createdAt;
+    private Long translatorId;
+    private Double reviewStar;
+    private String feedBack;
+    private Long clientId;
+
 }

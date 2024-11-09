@@ -12,4 +12,5 @@ import lombok.Setter;
 public class TranslatorAcceptTranslateProject {
     private Long id;
     private String status;
+    private Long userId;
 }

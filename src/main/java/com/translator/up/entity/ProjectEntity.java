@@ -60,16 +60,36 @@ public class ProjectEntity {
 
     public ProjectDTO mapToDTO() {
         if (translator == null) {
+            if (review != null) {
+                return new ProjectDTO(
+                        this.id, this.title, this.user.getFullName(), String.valueOf(this.translator.getFullName()),
+                        this.user.getPhoneNumber(), this.user.getEmail(),
+                        this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline,
+                        this.status,
+                        this.translateFile, this.translatedFile,
+                        this.createdAt, null, this.review.getReviewStar(), this.review.getFeedBack(),
+                        this.user.getId());
+            }
             return new ProjectDTO(
                     this.id, this.title, this.user.getFullName(), "", this.user.getPhoneNumber(), this.user.getEmail(),
-                    this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline, this.status, this.translateFile, this.translatedFile,
-                    this.createdAt
-            );
+                    this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline, this.status,
+                    this.translateFile, this.translatedFile,
+                    this.createdAt, null, null, null, this.user.getId());
+        }
+        if (review == null) {
+            return new ProjectDTO(
+                    this.id, this.title, this.user.getFullName(), String.valueOf(this.translator.getFullName()),
+                    this.user.getPhoneNumber(), this.user.getEmail(),
+                    this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline, this.status,
+                    this.translateFile, this.translatedFile,
+                    this.createdAt, this.translator.getId(), null, null, this.user.getId());
         }
         return new ProjectDTO(
-                this.id, this.title, this.user.getFullName(), String.valueOf(this.translator.getFullName()), this.user.getPhoneNumber(), this.user.getEmail(),
-                this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline, this.status, this.translateFile, this.translatedFile,
-                this.createdAt
-        );
+                this.id, this.title, this.user.getFullName(), String.valueOf(this.translator.getFullName()),
+                this.user.getPhoneNumber(), this.user.getEmail(),
+                this.description, this.sourceLanguage, this.targetLanguage, this.budget, this.deadline, this.status,
+                this.translateFile, this.translatedFile,
+                this.createdAt, this.translator.getId(), this.review.getReviewStar(), this.review.getFeedBack(),
+                this.user.getId());
     }
 }

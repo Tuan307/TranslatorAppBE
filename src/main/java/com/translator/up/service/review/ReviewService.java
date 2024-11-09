@@ -40,6 +40,8 @@ public class ReviewService {
             review.setProject(project.get());
             review.setSender(project.get().getUser());
             review.setReceiver(project.get().getTranslator());
+            project.get().setStatus("success");
+            projectRepository.save(project.get());
             reviewRepository.save(review);
             return new ApiResponse<>("success", "Successful", true, "");
         } else {
